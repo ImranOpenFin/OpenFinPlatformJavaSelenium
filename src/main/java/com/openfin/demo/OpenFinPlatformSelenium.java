@@ -25,26 +25,29 @@ public class OpenFinPlatformSelenium {
 	 * @return true if successful
 	 * @throws Exception
 	 */
-	private static boolean switchWindow(WebDriver webDriver, String windowTitle) throws Exception {
+	private static boolean switchToViewByTitle(WebDriver webDriver, String windowTitle) throws Exception {
 		boolean found = false;
 		long start = System.currentTimeMillis();
 		while (!found) {
 			for (String name : webDriver.getWindowHandles()) {
 				try {
-					System.out.println("found window name: " + name);
 					webDriver.switchTo().window(name);
-					System.out.println("found window title: " + webDriver.getTitle());
-					System.out.println("found window url: " + webDriver.getCurrentUrl());
-					
 					if (webDriver instanceof JavascriptExecutor) {
 						JavascriptExecutor js = (JavascriptExecutor) webDriver;
 						System.out.println("identity: " +  js.executeScript("return fin.me.identity"));
 						System.out.println("isWindow: " +  js.executeScript("return fin.me.isWindow"));
-					}
-					
-					if (webDriver.getTitle().equals(windowTitle)) {
-						found = true;
-						break;
+						Object isView = js.executeScript("return fin.me.isView");
+						System.out.println("isView: " +  isView);
+						if (isView instanceof Boolean) {
+							Boolean bIsView = (Boolean) isView;
+							if (bIsView) {
+								if (webDriver.getTitle().equals(windowTitle)) {
+									js.executeScript("fin.View.getCurrentSync().focus()");
+									found = true;
+									break;
+								}
+							}
+						}
 					}
 				}
 				catch (NoSuchWindowException wexp) {
@@ -58,13 +61,11 @@ public class OpenFinPlatformSelenium {
 				break;
 			}
 		}
-
 		if (!found) {
 			System.out.println(windowTitle + " not found");
 		}
 		return found;
 	}
-
 	/**
 	 * Sleep
 	 * 
